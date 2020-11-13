@@ -34,6 +34,7 @@ FROM (
     where date (datetimeoff)>=date('2020-08-15')
         and createdbycommitteename = 'NextGen America Distributed'
         and eventstatusname = 'Completed'
+   -- to distinguish between text/phone add 'and eventcalendarid = xyz' --
      )
      
  -- Total number unique conversations (texts) --
