@@ -2,10 +2,8 @@
 SELECT count(distinct vanid)
 FROM ( 
     select a.vanid
-        , A.eventroleid
         , eventrolename
         , B.eventstatusname
-        , D.eventid
   		, D.createdbycommitteename
         , date(A.datetimeoffsetbegin) as datetimeoff 
     from van.tsm_nextgen_eventsignups A
