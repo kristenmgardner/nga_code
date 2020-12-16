@@ -14,7 +14,7 @@ from reach.users
 select count(distinct case when peoplereached is not null then userid else null end) as count
 from reach.users
 
--- Count unique reach adds, broken by state -- for Dist just count where state NOT in az, fl... --
+-- Count unique reach adds, broken by state -- 
 select state, count(distinct reachid)
 from reach.people
 where state in ('AZ','FL','IA','ME','MI','NH','NC','NV','PA','VA','WI')
@@ -49,16 +49,39 @@ group by 1
 order by 1
 
 -- number reach adds that are matched to VF --
-select count(distinct vanid)
+select vb_vf_source_state, count(distinct vb_voterbase_id)
 FROM (
-select case 
-          when col_name = 'voterfilevanid'   
-          then col_value
-          else null end as vanid
+select p.state
+      , case 
+           when col_name = 'voterfilevanid'   
+            then col_value
+         else null end as vanid
 from reach.people P
 left join reach.people_xf XF using (reachid)
 where state in ('AZ','FL','IA','ME','MI','NH','NC','NV','PA','VA','WI')
-   )
+   ) px
+left join ts.current_analytics vf on (px.vanid = vf.vb_smartvan_id and px.state = vf.vb_vf_source_state)
+group by 1
+order by 1
+
+-- number of matched reach adds with vf or voterbase phone --
+select count(distinct vb_voterbase_id)
+FROM (
+select p.state
+      , case 
+           when col_name = 'voterfilevanid'   
+            then col_value
+         else null end as vanid
+from reach.people P
+left join reach.people_xf XF using (reachid)
+where state in ('AZ','FL','IA','ME','MI','NH','NC','NV','PA','VA','WI')
+   ) px
+left join ts.current_analytics vf on (px.vanid = vf.vb_smartvan_id and px.state = vf.vb_vf_source_state)
+where  (
+ (vb_vf_phone is not null)
+ OR 
+  (vb_voterbase_phone is not null)
+      )
    
 -- contact attempts to reach adds outside of reach app --
 select contacttype
@@ -107,8 +130,8 @@ from (
 from reach.people P
 left join reach.people_xf XF using (reachid)
      ) px
-left join van.tsm_nextgen_contactscontacts_vf CC on (cc.statecode = px.state and px.vanid = cc.vanid) 
-left join everyaction.ea_base_matched ea on (ea.vb_vf_source_state = px.state and ea.vb_smartvan_id = px.vanid)
+left join ts.current_analytics a on (a.vb_vf_source_state = px.state and a.vb_smartvan_id = px.vanid)
+left join everyaction.ea_base_matched ea on (a.vb_voterbase_id = ea.voterbase_id)
 left join van.tsm_nextgen_contactssurveyresponses_mym R ON (ea.vanid = r.vanid)
 left join van.tsm_nextgen_surveyquestions Q using (surveyquestionid)
 left join van.tsm_nextgen_surveyresponses SR ON (R.surveyresponseid = sr.surveyresponseid)
@@ -127,8 +150,8 @@ from (
 from reach.people P
 left join reach.people_xf XF using (reachid)
      ) px
-left join van.tsm_nextgen_contactscontacts_vf CC on (cc.statecode = px.state and px.vanid = cc.vanid) 
-left join everyaction.ea_base_matched ea on (ea.vb_vf_source_state = px.state and ea.vb_smartvan_id = px.vanid)
+left join ts.current_analytics a on (a.vb_vf_source_state = px.state and a.vb_smartvan_id = px.vanid)
+left join everyaction.ea_base_matched ea on (a.vb_voterbase_id = ea.voterbase_id)
 left join van.tsm_nextgen_contactssurveyresponses_mym R ON (ea.vanid = r.vanid)
 left join van.tsm_nextgen_surveyquestions Q using (surveyquestionid)
 left join van.tsm_nextgen_surveyresponses SR ON (R.surveyresponseid = sr.surveyresponseid)
@@ -150,12 +173,13 @@ from (
 from reach.people P
 left join reach.people_xf XF using (reachid)
      ) px
-left join van.tsm_nextgen_contactscontacts_vf CC on (cc.statecode = px.state and px.vanid = cc.vanid) 
 left join ts.current_analytics A on (a.vb_vf_source_state = px.state and a.vb_smartvan_id = px.vanid)
 where a.vb_voterbase_id IN (
            select distinct(vb_voterbase_id)
            from universes.gotv_myv_20200911
                            )
+ group by 1
+ order by 1
 
 -- count unique volunteers among reach adds --
 select state, count(distinct vanid)
@@ -170,8 +194,8 @@ from (
          from reach.people P
          left join reach.people_xf XF using (reachid)
             ) px
-left join van.tsm_nextgen_contactscontacts_vf CC on (cc.statecode = px.state and px.vanid = cc.vanid) 
-left join everyaction.ea_base_matched ea on (ea.vb_vf_source_state = px.state and ea.vb_smartvan_id = px.vanid)
+left join ts.current_analytics a on (a.vb_vf_source_state = px.state and a.vb_smartvan_id = px.vanid)
+left join everyaction.ea_base_matched ea on (a.vb_voterbase_id = ea.voterbase_id)
 left join van.tsm_nextgen_eventsignups es on (es.vanid = ea.vanid)
 left join van.tsm_nextgen_eventsignupsstatuses st using(eventsignupid)
 left join van.tsm_nextgen_events ev using(eventid)
