@@ -5,14 +5,14 @@ create table ts.ev_g2020_dashboard_table AS (
      , a.vb_smartvan_id as smartvan_id
      , a.vb_vf_source_state as state
      , (case 
-     		when a.vb_voterbase_age <= 35 then 'Under_35'
-        when a.vb_voterbase_age >= 36 then 'Above_35'
-              end) as age
+     		  when a.vb_voterbase_age <= 35 then 'Under_35'
+          when a.vb_voterbase_age >= 36 then 'Above_35'
+        end) as age
      , (case
         	when a.vb_vf_party = 'Republican' then 'Republican'
         	when a.vb_vf_party = 'Democrat' then 'Democrat'
           else 'Other' 
-          end) as party
+        end) as party
      , a.vb_voterbase_gender as gender
      , a.vb_vf_race as race
      , a.vb_vf_cd as congressional_district
