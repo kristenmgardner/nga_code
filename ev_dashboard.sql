@@ -300,7 +300,7 @@ FROM (
                 , gender
                 , party
                 , date_ballot_received
-            FROM kgardner.ev_data_2016
+            FROM ts.ev_g2016_dashboard_table
             where date_ballot_received is not null
                  )
         B ON cast(a.date as date) = cast(b.date_ballot_received as date)
